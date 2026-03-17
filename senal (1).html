@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SEÑAL PERDIDA — Bar de Transmisiones Secretas · Cali</title>
+<link rel="stylesheet" href="senal.css"/>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Black+Han+Sans&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- STATIC CANVAS (fullscreen background noise) -->
+<canvas id="staticCanvas" class="static-canvas"></canvas>
+
+<!-- SCANLINES -->
+<div class="tv-scanlines"></div>
+<!-- CRT VIGNETTE -->
+<div class="crt-vignette"></div>
+<!-- FLICKER OVERLAY -->
+<div class="flicker-layer" id="flickerLayer"></div>
+
+<!-- TUNING SCREEN / LOADER -->
+<div id="tuningScreen">
+  <div class="tuning-wrap">
+    <div class="tuning-top">
+      <div class="tuning-station">FM 87.3</div>
+      <div class="tuning-searching">BUSCANDO SEÑAL...</div>
+    </div>
+    <div class="dial-container">
+      <div class="dial-track">
+        <div class="dial-needle" id="dialNeedle"></div>
+        <div class="dial-marks">
+          <span>87</span><span>88</span><span>90</span><span>92</span><span>94</span>
+          <span>96</span><span>98</span><span>100</span><span>102</span><span>104</span>
+          <span>106</span><span>108</span>
+        </div>
+      </div>
+    </div>
+    <div class="tuning-eq" id="tuningEq"></div>
+    <div class="tuning-log" id="tuningLog"></div>
+    <div class="tuning-found" id="tuningFound" style="display:none">
+      <span class="tf-freq">█▓▒░ FM 96.7 ░▒▓█</span>
+      <span class="tf-name">SEÑAL PERDIDA</span>
+      <span class="tf-sub">TRANSMISIÓN ENCONTRADA</span>
+      <button class="tf-btn" onclick="enterSignal()">▶ SINTONIZAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- CASSETTE PLAYER HUD (top bar) -->
+<div class="cassette-hud" id="cassetteHud">
+  <div class="ch-left">
+    <div class="ch-tape" id="chTape">
+      <div class="tape-reel left" id="reelL"></div>
+      <div class="tape-window">
+        <div class="tape-label">
+          <span class="tl-side">◄ SEÑAL</span>
+          <span class="tl-title">PERDIDA</span>
+          <span class="tl-sub">Side A · 90min</span>
+        </div>
+      </div>
+      <div class="tape-reel right" id="reelR"></div>
+    </div>
+  </div>
+  <div class="ch-center">
+    <div class="ch-freq">FM <span id="freqDisplay">96.7</span></div>
+    <div class="ch-eq-mini" id="chEqMini"></div>
+    <div class="ch-track-name" id="chTrackName">▶ En vivo desde Cali, Colombia</div>
+  </div>
+  <div class="ch-right">
+    <div class="ch-time" id="chTime">00:00:00</div>
+    <nav class="ch-nav">
+      <a href="#broadcast" class="chn-link">ON AIR</a>
+      <a href="#tracklist" class="chn-link">CARTA</a>
+      <a href="#experiencia" class="chn-link">EXPERIENCIA</a>
+      <a href="#domicilios" class="chn-link">DOMICILIOS</a>
+      <a href="#request" class="chn-link">RESERVAR</a>
+      <a href="#estudio" class="chn-link">ESTUDIO</a>
+    </nav>
+    <button class="ch-reserve" onclick="document.getElementById('request').scrollIntoView({behavior:'smooth'})">
+      ● REC RESERVA
+    </button>
+    <button class="ch-ham" id="chHam"><i class="fas fa-bars"></i></button>
+  </div>
+</div>
+<!-- MOBILE MENU -->
+<div class="mob-menu" id="mobMenu">
+  <a href="#broadcast" onclick="closeMob()">ON AIR</a>
+  <a href="#tracklist" onclick="closeMob()">CARTA</a>
+  <a href="#experiencia" onclick="closeMob()">EXPERIENCIA</a>
+  <a href="#domicilios" onclick="closeMob()">DOMICILIOS</a>
+  <a href="#request" onclick="closeMob()">RESERVAR</a>
+  <a href="#estudio" onclick="closeMob()">ESTUDIO</a>
+</div>
+
+<!-- ====== BROADCAST / HERO ====== -->
+<section class="section-broadcast" id="broadcast">
+  <div class="broadcast-grid"></div>
+
+  <div class="broadcast-content">
+    <!-- Left: VU Meter + station info -->
+    <div class="bc-left">
+      <div class="bc-onair">
+        <span class="oa-dot"></span> ON AIR
+      </div>
+      <div class="bc-station">
+        <div class="bcs-freq">96.7<span class="bcs-fm">FM</span></div>
+        <div class="bcs-name">SEÑAL<br/>PERDIDA</div>
+        <div class="bcs-tagline">"La frecuencia que nunca debiste<br/>encontrar."</div>
+      </div>
+      <!-- VU Meter -->
+      <div class="vu-meter" id="vuMeter">
+        <div class="vu-label">VU</div>
+        <div class="vu-bars" id="vuBars"></div>
+        <div class="vu-scale">
+          <span>-20</span><span>-10</span><span>-7</span><span>-5</span><span>-3</span><span>0</span><span>+3</span>
+        </div>
+      </div>
+      <!-- Waveform -->
+      <canvas id="waveCanvas" class="wave-canvas" width="360" height="60"></canvas>
+      <div class="bc-sub-info">
+        <div class="bsi-row"><span class="bsi-dot green"></span> Transmitiendo en vivo</div>
+        <div class="bsi-row"><span class="bsi-dot amber"></span> Cali, Valle del Cauca</div>
+        <div class="bsi-row"><span class="bsi-dot green"></span> Est. 1987 · Relanzado 2019</div>
+      </div>
+    </div>
+
+    <!-- Center: Main display -->
+    <div class="bc-center">
+      <!-- Big screen display -->
+      <div class="main-screen">
+        <div class="ms-crt-lines"></div>
+        <div class="ms-content">
+          <div class="ms-now-playing">▶ AHORA EN TRANSMISIÓN</div>
+          <div class="ms-title" id="msTitle">SEÑAL PERDIDA</div>
+          <div class="ms-sub" id="msSub">Bar · Coctelería · Estudio de Radio</div>
+          <div class="ms-ticker" id="msTicker">
+            <div class="mt-inner" id="mtInner">
+              ··· BIENVENIDO A LA FRECUENCIA SECRETA ··· COCTELES ARTESANALES DESDE 1987 ··· TRANSMISIONES EN VIVO VIERNES Y SÁBADOS ··· RESERVAS AL +57 316 789 0123 ···
+            </div>
+          </div>
+          <div class="ms-buttons">
+            <button class="ms-btn primary" onclick="document.getElementById('tracklist').scrollIntoView({behavior:'smooth'})">
+              ▶ VER CARTA
+            </button>
+            <button class="ms-btn secondary" onclick="openFreqModal()">
+              ◈ DIAL SECRETO
+            </button>
+            <button class="ms-btn secondary" onclick="document.getElementById('request').scrollIntoView({behavior:'smooth'})">
+              ● RESERVAR
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Stats row -->
+      <div class="bc-stats">
+        <div class="bstat"><span class="bstat-n" data-target="4200">0</span><span class="bstat-l">Oyentes/mes</span></div>
+        <div class="bstat-sep">▐</div>
+        <div class="bstat"><span class="bstat-n" data-target="64">0</span><span class="bstat-l">Cocteles</span></div>
+        <div class="bstat-sep">▐</div>
+        <div class="bstat"><span class="bstat-n" data-target="37">0</span><span class="bstat-l">Años de historia</span></div>
+        <div class="bstat-sep">▐</div>
+        <div class="bstat"><span class="bstat-n" data-target="98">0</span><span class="bstat-l">% Satisfacción</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Dial + controls -->
+    <div class="bc-right">
+      <!-- Tuning dial -->
+      <div class="tuning-dial-wrap">
+        <div class="tdw-label">SINTONÍA</div>
+        <div class="tuning-dial" id="tuningDial">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="dial-svg" id="dialSvg">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#3a3a1a" stroke-width="2"/>
+            <circle cx="100" cy="100" r="80" fill="#1a1a0a" stroke="#c8a030" stroke-width="1" opacity="0.5"/>
+            <!-- Tick marks -->
+            ${Array.from({length:36},(_,i)=>`<line x1="100" y1="16" x2="100" y2="${i%3===0?26:22}" stroke="#c8a030" stroke-width="${i%3===0?1.5:0.7}" opacity="${i%3===0?0.8:0.4}" transform="rotate(${i*10} 100 100)"/>`).join('')}
+            <!-- Frequency labels -->
+            <text x="100" y="44" text-anchor="middle" font-family="VT323" font-size="11" fill="#c8a030" opacity="0.7" transform="rotate(0 100 100)">87</text>
+            <text x="100" y="44" text-anchor="middle" font-family="VT323" font-size="11" fill="#c8a030" opacity="0.7" transform="rotate(90 100 100)">97</text>
+            <text x="100" y="44" text-anchor="middle" font-family="VT323" font-size="11" fill="#c8a030" opacity="0.7" transform="rotate(180 100 100)">107</text>
+            <!-- Needle -->
+            <line x1="100" y1="100" x2="100" y2="28" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" id="svgNeedle"/>
+            <circle cx="100" cy="100" r="8" fill="#2a2a12" stroke="#c8a030" stroke-width="1.5"/>
+            <circle cx="100" cy="100" r="3" fill="#c8a030"/>
+          </svg>
+          <div class="dial-freq-display" id="dialFreqDisp">96.7</div>
+        </div>
+        <div class="tdw-hint">← Arrastra para sintonizar</div>
+      </div>
+
+      <!-- Equalizer controls -->
+      <div class="eq-panel" id="eqPanel">
+        <div class="eq-title">ECUALIZADOR</div>
+        <div class="eq-sliders" id="eqSliders"></div>
+      </div>
+
+      <!-- Horario badge -->
+      <div class="horario-badge">
+        <div class="hb-title">▶ TRANSMISIONES</div>
+        <div class="hb-row"><span>Lun – Jue</span><span>6PM – 1AM</span></div>
+        <div class="hb-row"><span>Vie – Sáb</span><span>6PM – 3AM ♪</span></div>
+        <div class="hb-row"><span>Domingo</span><span>5PM – 12AM</span></div>
+        <div class="hb-live">● LIVE MUSIC VIE &amp; SÁB 9PM</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HIDDEN FREQUENCY MODAL -->
+<div class="freq-modal" id="freqModal">
+  <div class="fm-box">
+    <div class="fm-header">
+      <span class="fm-title">◈ FRECUENCIAS SECRETAS</span>
+      <button class="fm-close" onclick="closeFreqModal()">✕</button>
+    </div>
+    <p class="fm-intro">Sintoniza cada frecuencia para descubrir el contenido oculto de la transmisión.</p>
+    <div class="fm-freqs" id="fmFreqs"></div>
+  </div>
+  <div class="fm-bg" onclick="closeFreqModal()"></div>
+</div>
+
+<!-- ====== TRACKLIST / CARTA ====== -->
+<section class="section-dark" id="tracklist">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label">
+        <span class="stl-side">▶ SIDE A</span>
+        <span class="stl-title">LA CARTA DE TRANSMISIONES</span>
+        <span class="stl-time">90 MIN</span>
+      </div>
+      <p class="sh-sub">Cada coctel es una frecuencia diferente. Sintoniza la tuya.</p>
+    </div>
+    <!-- Category selector as radio preset buttons -->
+    <div class="preset-btns" id="presetBtns"></div>
+    <!-- Menu as cassette tape tracks -->
+    <div class="track-listing" id="trackListing"></div>
+  </div>
+</section>
+
+<!-- ====== EXPERIENCIA / LO QUE HACEMOS ====== -->
+<section class="section-amber" id="experiencia">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label amber-tape">
+        <span class="stl-side">▶ SIDE B</span>
+        <span class="stl-title">LO QUE TRANSMITIMOS</span>
+        <span class="stl-time">24/7</span>
+      </div>
+      <p class="sh-sub amber-sub">Más que un bar. Una experiencia en vivo que no se puede pausar ni rebobinar.</p>
+    </div>
+    <div class="exp-grid" id="expGrid"></div>
+    <!-- Live events strip -->
+    <div class="live-strip">
+      <div class="ls-badge">● EN VIVO</div>
+      <div class="ls-events" id="lsEvents"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== DOMICILIOS ====== -->
+<section class="section-dark" id="domicilios">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label">
+        <span class="stl-side">📻 DELIVERY</span>
+        <span class="stl-title">TRANSMISIÓN A DOMICILIO</span>
+        <span class="stl-time">30-50 MIN</span>
+      </div>
+      <p class="sh-sub">El bar llega hasta tu puerta. Mínimo 2 tragos. Domicilio gratis en pedidos +$80.000.</p>
+    </div>
+    <!-- Delivery info chips -->
+    <div class="del-info-row">
+      <div class="di-chip"><span class="di-icon">⏱</span><strong>30–50 min</strong><span>Tiempo de entrega</span></div>
+      <div class="di-chip"><span class="di-icon">📍</span><strong>Granada · El Peñón · San Antonio · Versalles</strong><span>Zonas cubiertas</span></div>
+      <div class="di-chip"><span class="di-icon">🛵</span><strong>Gratis +$80.000</strong><span>Envío gratuito</span></div>
+      <div class="di-chip"><span class="di-icon">🍹</span><strong>Mín. 2 tragos</strong><span>Por pedido</span></div>
+    </div>
+    <div class="del-layout">
+      <!-- Product grid -->
+      <div class="del-products-wrap">
+        <div class="del-section-title">▶ ELIGE TUS TRANSMISIONES</div>
+        <div class="del-products" id="delProducts"></div>
+        <!-- Cart -->
+        <div class="del-cart" id="delCart">
+          <div class="dc-header">🛒 TU PEDIDO</div>
+          <div class="dc-items" id="dcItems"><p class="console-hint">Aún no has agregado nada</p></div>
+          <div class="dc-totals" id="dcTotals" style="display:none">
+            <div class="dct-row"><span>Subtotal:</span><strong id="dctSub">$0</strong></div>
+            <div class="dct-row"><span>Domicilio:</span><strong id="dctDel">$5.000</strong></div>
+            <div class="dct-row total"><span>TOTAL:</span><strong id="dctTotal">$0</strong></div>
+          </div>
+        </div>
+      </div>
+      <!-- Delivery form -->
+      <div class="del-form-wrap">
+        <div class="del-section-title">▶ DATOS DE ENTREGA</div>
+        <div class="del-fields">
+          <input type="text" id="delName" placeholder="NOMBRE COMPLETO" class="console-input"/>
+          <input type="tel" id="delPhone" placeholder="TELÉFONO / WHATSAPP" class="console-input"/>
+          <input type="text" id="delAddr" placeholder="DIRECCIÓN COMPLETA" class="console-input"/>
+          <input type="text" id="delBarrio" placeholder="BARRIO" class="console-input"/>
+          <textarea id="delNote" placeholder="INSTRUCCIONES (apto, torre, referencia...)" class="console-input" rows="2"></textarea>
+        </div>
+        <!-- PAYMENT -->
+        <div class="payment-channel">
+          <div class="pc-header">
+            <span class="pc-ch">CH.4</span>
+            <span class="pc-title">MÉTODO DE PAGO</span>
+          </div>
+          <div class="pc-options">
+            <button class="pc-opt" id="del-pc-cash" onclick="selectDelPay('cash',this)">
+              <span class="pco-led" id="del-led-cash"></span>
+              <span class="pco-icon">💵</span>
+              <span class="pco-name">EFECTIVO</span>
+              <span class="pco-sub">Al llegar</span>
+            </button>
+            <button class="pc-opt" id="del-pc-nequi" onclick="selectDelPay('nequi',this)">
+              <span class="pco-led" id="del-led-nequi"></span>
+              <span class="pco-icon"><svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#6C0CE0"/><text x="13" y="19" text-anchor="middle" font-family="Arial Black" font-size="11" font-weight="900" fill="white">N</text></svg></span>
+              <span class="pco-name">NEQUI</span>
+              <span class="pco-sub">316 789 0123</span>
+            </button>
+            <button class="pc-opt" id="del-pc-daviplata" onclick="selectDelPay('daviplata',this)">
+              <span class="pco-led" id="del-led-daviplata"></span>
+              <span class="pco-icon"><svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#E30613"/><text x="13" y="18" text-anchor="middle" font-family="Arial Black" font-size="9" font-weight="900" fill="white">DV</text></svg></span>
+              <span class="pco-name">DAVIPLATA</span>
+              <span class="pco-sub">316 789 0123</span>
+            </button>
+            <button class="pc-opt" id="del-pc-transfer" onclick="selectDelPay('transfer',this)">
+              <span class="pco-led" id="del-led-transfer"></span>
+              <span class="pco-icon">🏦</span>
+              <span class="pco-name">TRANSFER</span>
+              <span class="pco-sub">PSE/Banco</span>
+            </button>
+          </div>
+          <div class="pc-copy-strip" id="delCopyStrip" style="display:none">
+            <span class="pcs-label" id="delCopyLabel">NÚMERO:</span>
+            <span class="pcs-num">316 789 0123</span>
+            <button class="pcs-copy" onclick="copyDelNum()">⎗ COPIAR</button>
+          </div>
+          <div class="pc-msg" id="delPayMsg"></div>
+        </div>
+        <button class="ms-btn primary full-btn" onclick="confirmDelivery()" style="margin-top:12px">
+          🛵 ENVIAR PEDIDO
+        </button>
+        <div style="text-align:center;margin-top:10px">
+          <a href="https://wa.me/573167890123" target="_blank" class="wa-del-btn">
+            <i class="fab fa-whatsapp"></i> Pedir por WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DELIVERY CONFIRMED MODAL -->
+<div class="confirm-modal" id="delModal">
+  <div class="cm-box">
+    <div class="cm-tape-top"></div>
+    <div class="cm-body">
+      <div class="cm-rec"><span class="cm-dot"></span> TRANSMITIDO</div>
+      <div class="cm-title">PEDIDO EN<br/>CAMINO 🛵</div>
+      <div class="cm-waveform" id="delWaveform"></div>
+      <p id="delModalText"></p>
+      <button class="ms-btn primary" onclick="closeDelModal()">▶ SEGUIR NAVEGANDO</button>
+    </div>
+    <div class="cm-tape-bottom"></div>
+  </div>
+  <div class="cm-bg" onclick="closeDelModal()"></div>
+</div>
+
+<!-- ====== GALERÍA ====== -->
+<section class="section-dark" id="galeria">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label">
+        <span class="stl-side">▶ BONUS</span>
+        <span class="stl-title">EL ESTUDIO</span>
+        <span class="stl-time">FOTOS</span>
+      </div>
+    </div>
+  </div>
+  <!-- Horizontal scroll gallery -->
+  <div class="gallery-tape" id="galleryTape"></div>
+  <div class="gallery-controls">
+    <button class="gc-btn" onclick="galPrev()">◄◄</button>
+    <div class="gc-dots" id="gcDots"></div>
+    <button class="gc-btn" onclick="galNext()">►►</button>
+  </div>
+</section>
+
+<!-- ====== REQUEST / RESERVA ====== -->
+<section class="section-amber" id="request">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label amber-tape">
+        <span class="stl-side">● REC</span>
+        <span class="stl-title">SOLICITAR TRANSMISIÓN</span>
+        <span class="stl-time">RESERVA</span>
+      </div>
+      <p class="sh-sub amber-sub">Graba tu solicitud. La emisora confirmará en menos de 30 minutos.</p>
+    </div>
+    <div class="request-layout">
+      <!-- Form styled as a recording console -->
+      <div class="recording-console">
+        <div class="rc-header">
+          <div class="rc-rec"><span class="rc-dot"></span> REC</div>
+          <div class="rc-title">CONSOLA DE GRABACIÓN</div>
+          <div class="rc-track-num" id="rcTrackNum">TRACK 01</div>
+        </div>
+
+        <!-- Step I: Drink selection -->
+        <div class="rec-step active" id="rs1">
+          <div class="rst-label">I — SINTONIZA UN TRAGO</div>
+          <div class="drink-pick-grid" id="drinkPickGrid"></div>
+        </div>
+        <!-- Step II: Date/time -->
+        <div class="rec-step" id="rs2">
+          <div class="rst-label">II — FECHA DE EMISIÓN</div>
+          <input type="date" id="reqDate" class="console-input" style="margin-bottom:12px"/>
+          <div class="timeslot-grid" id="timeslotGrid">
+            <p class="console-hint">Selecciona fecha para ver slots</p>
+          </div>
+          <button class="rc-back" onclick="goRec(1)">◄ ATRÁS</button>
+        </div>
+        <!-- Step III: Data + payment -->
+        <div class="rec-step" id="rs3">
+          <div class="rst-label">III — DATOS DEL OYENTE</div>
+          <div class="console-fields">
+            <input type="text" id="reqName" placeholder="NOMBRE COMPLETO" class="console-input"/>
+            <input type="tel" id="reqPhone" placeholder="TELÉFONO / WHATSAPP" class="console-input"/>
+            <input type="email" id="reqEmail" placeholder="CORREO ELECTRÓNICO" class="console-input"/>
+            <select id="reqOcasion" class="console-input">
+              <option value="">OCASIÓN (opcional)</option>
+              <option>🎂 Cumpleaños</option>
+              <option>💕 Aniversario</option>
+              <option>🎉 Fiesta</option>
+              <option>🥂 Celebración</option>
+              <option>🎵 Solo quiero escuchar</option>
+            </select>
+          </div>
+
+          <!-- PAYMENT SECTION styled as mixing board channel -->
+          <div class="payment-channel">
+            <div class="pc-header">
+              <span class="pc-ch">CH.4</span>
+              <span class="pc-title">MÉTODO DE PAGO</span>
+              <span class="pc-fader-label">INPUT</span>
+            </div>
+            <div class="pc-options" id="pcOptions">
+              <button class="pc-opt" id="pc-cash" onclick="selectPay('cash',this)">
+                <span class="pco-led" id="led-cash"></span>
+                <span class="pco-icon">💵</span>
+                <span class="pco-name">EFECTIVO</span>
+                <span class="pco-sub">Al llegar</span>
+              </button>
+              <button class="pc-opt" id="pc-nequi" onclick="selectPay('nequi',this)">
+                <span class="pco-led" id="led-nequi"></span>
+                <span class="pco-icon">
+                  <svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#6C0CE0"/><text x="13" y="19" text-anchor="middle" font-family="Arial Black" font-size="11" font-weight="900" fill="white">N</text></svg>
+                </span>
+                <span class="pco-name">NEQUI</span>
+                <span class="pco-sub">316 789 0123</span>
+              </button>
+              <button class="pc-opt" id="pc-daviplata" onclick="selectPay('daviplata',this)">
+                <span class="pco-led" id="led-daviplata"></span>
+                <span class="pco-icon">
+                  <svg width="26" height="26" viewBox="0 0 26 26"><rect width="26" height="26" rx="6" fill="#E30613"/><text x="13" y="18" text-anchor="middle" font-family="Arial Black" font-size="9" font-weight="900" fill="white">DV</text></svg>
+                </span>
+                <span class="pco-name">DAVIPLATA</span>
+                <span class="pco-sub">316 789 0123</span>
+              </button>
+              <button class="pc-opt" id="pc-transfer" onclick="selectPay('transfer',this)">
+                <span class="pco-led" id="led-transfer"></span>
+                <span class="pco-icon">🏦</span>
+                <span class="pco-name">TRANSFER</span>
+                <span class="pco-sub">PSE / Banco</span>
+              </button>
+            </div>
+            <!-- Number copy strip for Nequi/Davi -->
+            <div class="pc-copy-strip" id="pcCopyStrip" style="display:none">
+              <span class="pcs-label" id="pcsLabel">NÚMERO:</span>
+              <span class="pcs-num" id="pcsNum">316 789 0123</span>
+              <button class="pcs-copy" onclick="copyPaymentNum()">⎗ COPIAR</button>
+            </div>
+            <div class="pc-msg" id="pcMsg"></div>
+          </div>
+
+          <button class="rc-back" onclick="goRec(2)">◄ ATRÁS</button>
+          <button class="ms-btn primary full-btn" onclick="sendRequest()">● GRABAR SOLICITUD</button>
+        </div>
+      </div>
+
+      <!-- Playback / summary panel -->
+      <div class="playback-panel">
+        <div class="pp-deck">
+          <div class="pp-cassette">
+            <div class="pp-cas-body">
+              <div class="pp-reel r1"></div>
+              <div class="pp-cas-label">
+                <div class="pp-cls-title">SEÑAL PERDIDA</div>
+                <div class="pp-cls-sub">TU RESERVA</div>
+              </div>
+              <div class="pp-reel r2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="pp-readout">
+          <div class="pp-row"><span>TRAGO</span><strong id="pp-drink">—</strong></div>
+          <div class="pp-row"><span>PRECIO</span><strong id="pp-price">—</strong></div>
+          <div class="pp-row"><span>FECHA</span><strong id="pp-date">—</strong></div>
+          <div class="pp-row"><span>HORA</span><strong id="pp-time">—</strong></div>
+          <div class="pp-row"><span>PAGO</span><strong id="pp-pay">—</strong></div>
+        </div>
+        <div class="pp-horario">
+          <div class="pph-title">▶ HORARIO DE EMISIÓN</div>
+          <div class="pph-row"><span>Lun–Jue</span><span>6PM–1AM</span></div>
+          <div class="pph-row"><span>Vie–Sáb</span><span>6PM–3AM</span></div>
+          <div class="pph-row"><span>Dom</span><span>5PM–12AM</span></div>
+        </div>
+        <div class="pp-addr">📍 Av. 6N #23-45, Granada · Cali</div>
+        <a class="pp-wa" href="https://wa.me/573167890123" target="_blank">
+          <i class="fab fa-whatsapp"></i> Reservar por WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKING CONFIRMED MODAL -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="cm-box">
+    <div class="cm-tape-top"></div>
+    <div class="cm-body">
+      <div class="cm-rec"><span class="cm-dot"></span> GRABADO</div>
+      <div class="cm-title">SOLICITUD<br/>TRANSMITIDA</div>
+      <div class="cm-waveform" id="cmWaveform"></div>
+      <p id="cmText"></p>
+      <button class="ms-btn primary" onclick="closeConfirm()">▶ CONTINUAR ESCUCHANDO</button>
+    </div>
+    <div class="cm-tape-bottom"></div>
+  </div>
+  <div class="cm-bg" onclick="closeConfirm()"></div>
+</div>
+
+<!-- ====== ESTUDIO / ABOUT + MAP ====== -->
+<section class="section-dark" id="estudio">
+  <div class="container">
+    <div class="section-header">
+      <div class="sh-tape-label">
+        <span class="stl-side">◉ ESTUDIO</span>
+        <span class="stl-title">DETRÁS DEL MICRÓFONO</span>
+        <span class="stl-time">INFO</span>
+      </div>
+    </div>
+    <div class="studio-layout">
+      <div class="studio-info">
+        <!-- Founders as DJ profiles -->
+        <div class="studio-founders">
+          <div class="sf-title">▶ LOS FUNDADORES</div>
+          <div class="sf-profile">
+            <div class="sf-avatar" style="border-color:#c8a030">JJ</div>
+            <div>
+              <strong>Jhon Jairo Parra</strong>
+              <span>Director Creativo & Bartender Fundador</span>
+              <p>"La radio y los cocteles tienen algo en común: ambos necesitan la frecuencia correcta para que funcionen."</p>
+            </div>
+          </div>
+          <div class="sf-profile">
+            <div class="sf-avatar" style="border-color:#ff6b35">SB</div>
+            <div>
+              <strong>Sebastián Banguera</strong>
+              <span>Diseñador del Estudio & Co-Fundador</span>
+              <p>"Construimos este lugar para que la gente vuelva a escuchar. La música. Los sonidos. El silencio entre sorbo y sorbo."</p>
+            </div>
+          </div>
+        </div>
+        <!-- Contact cards -->
+        <div class="contact-cards">
+          <div class="cc"><i class="fas fa-map-marker-alt"></i><div><strong>El Estudio</strong><p>Av. 6N #23-45, Granada,<br/>Cali, Valle del Cauca</p></div></div>
+          <div class="cc"><i class="fas fa-phone"></i><div><strong>Línea Directa</strong><p>+57 316 789 0123</p></div></div>
+          <div class="cc"><i class="fab fa-instagram"></i><div><strong>Ondas</strong><p>@senalperdida.cali</p></div></div>
+          <div class="cc"><i class="fab fa-whatsapp"></i><div><strong>WhatsApp</strong><p>+57 316 789 0123</p></div></div>
+        </div>
+        <a class="ms-btn primary" href="https://www.google.com/maps/dir/?api=1&destination=Av+6N+23-45+Granada+Cali" target="_blank"><i class="fas fa-route"></i> Cómo llegar</a>
+      </div>
+      <div class="studio-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127500!2d-76.5225!3d3.4516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e30a6f0cc4bb3f1%3A0x1f0fb5e952ae6168!2sCali%2C%20Valle%20del%20Cauca!5e0!3m2!1ses!2sco!4v1680000000000"
+          width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer-signal">
+  <div class="fs-inner">
+    <div class="fs-brand">
+      <div class="fs-eq" id="fsEq"></div>
+      <div class="fs-name">SEÑAL PERDIDA</div>
+      <div class="fs-freq">FM 96.7 · CALI</div>
+    </div>
+    <p class="fs-copy">"Desde 1987, transmitiendo sabor y música en la frecuencia correcta."</p>
+    <div class="fs-social">
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-tiktok"></i></a>
+      <a href="#"><i class="fab fa-spotify"></i></a>
+      <a href="#"><i class="fab fa-soundcloud"></i></a>
+      <a href="#"><i class="fab fa-whatsapp"></i></a>
+    </div>
+    <div class="fs-bottom">▐▌ © 2024 SEÑAL PERDIDA · TODOS LOS DERECHOS RESERVADOS · FM 96.7 · CALI, COLOMBIA ▐▌</div>
+  </div>
+</footer>
+
+<script src="senal.js"></script>
+</body>
+</html>
