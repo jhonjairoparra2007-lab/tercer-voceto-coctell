@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ALQUIMIA NOCTURNA — El Grimorio de los Sabores</title>
+<link rel="stylesheet" href="alquimia.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=MedievalSharp&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- PARTICLES CANVAS -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor-quill" id="cursorQuill">
+  <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 2 C24 6 22 14 16 20 L12 30 L10 22 C6 18 4 10 8 4 C12 0 18 0 20 2Z" fill="#c8a84b" opacity="0.9"/>
+    <path d="M12 30 L10 22 L14 18" stroke="#8b6914" stroke-width="0.8" fill="none"/>
+    <path d="M8 4 C10 8 12 12 10 18" stroke="rgba(200,168,75,0.4)" stroke-width="0.6" fill="none"/>
+  </svg>
+  <div class="ink-trail" id="inkTrail"></div>
+</div>
+
+<!-- GRIMOIRE COVER / LOADER -->
+<div id="grimCover">
+  <div class="grim-book">
+    <div class="grim-spine"></div>
+    <div class="grim-front">
+      <div class="grim-pentagram">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="penta-svg">
+          <circle cx="100" cy="100" r="90" fill="none" stroke="#c8a84b" stroke-width="0.8" opacity="0.6"/>
+          <circle cx="100" cy="100" r="75" fill="none" stroke="#c8a84b" stroke-width="0.4" opacity="0.4"/>
+          <polygon points="100,15 183,68 152,168 48,168 17,68" fill="none" stroke="#c8a84b" stroke-width="0.8" opacity="0.7"/>
+          <polygon points="100,185 17,132 48,32 152,32 183,132" fill="none" stroke="#8b3a3a" stroke-width="0.5" opacity="0.5"/>
+          <circle cx="100" cy="100" r="12" fill="#c8a84b" opacity="0.2"/>
+          <circle cx="100" cy="100" r="5" fill="#c8a84b" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="grim-cover-title">
+        <span class="gct-small">Grimorio de</span>
+        <span class="gct-main">ALQUIMIA</span>
+        <span class="gct-sub">NOCTURNA</span>
+        <span class="gct-divider">✦ ✦ ✦</span>
+        <span class="gct-tiny">El Arte Secreto de los Sabores · Cali</span>
+      </div>
+      <div class="grim-ornament-bottom">
+        <svg viewBox="0 0 300 40" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="20" x2="110" y2="20" stroke="#c8a84b" stroke-width="0.6" opacity="0.5"/>
+          <path d="M110 20 C120 10 130 10 140 20 C150 30 160 30 170 20 C180 10 190 10 200 20" fill="none" stroke="#c8a84b" stroke-width="0.8" opacity="0.7"/>
+          <line x1="200" y1="20" x2="300" y2="20" stroke="#c8a84b" stroke-width="0.6" opacity="0.5"/>
+          <circle cx="150" cy="20" r="4" fill="#c8a84b" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="grim-open-hint">[ Toca para abrir el grimorio ]</div>
+  </div>
+</div>
+
+<!-- FLOATING RUNES -->
+<div class="runes-layer" id="runesLayer"></div>
+
+<!-- GRIMOIRE NAV -->
+<nav class="grim-nav" id="grimNav">
+  <div class="gn-brand">
+    <span class="gn-symbol">⚗</span>
+    <span class="gn-name">ALQUIMIA<em>NOCTURNA</em></span>
+  </div>
+  <div class="gn-chapters">
+    <a href="#portada" class="gn-ch" data-ch="I">Cap. I — El Umbral</a>
+    <a href="#pociones" class="gn-ch" data-ch="II">Cap. II — Pociones</a>
+    <a href="#oraculo" class="gn-ch" data-ch="III">Cap. III — Oráculo</a>
+    <a href="#alquimistas" class="gn-ch" data-ch="IV">Cap. IV — Alquimistas</a>
+    <a href="#galeria" class="gn-ch" data-ch="V">Cap. V — El Santuario</a>
+    <a href="#ritual" class="gn-ch" data-ch="VI">Cap. VI — Ritual</a>
+  </div>
+  <button class="gn-cta" onclick="scrollTo('ritual')">✦ Reservar Mesa</button>
+  <button class="gn-ham" id="gnHam"><i class="fas fa-bars"></i></button>
+</nav>
+<div class="gn-mobile" id="gnMobile">
+  <a href="#portada" onclick="closeGnMobile()">I — El Umbral</a>
+  <a href="#pociones" onclick="closeGnMobile()">II — Pociones</a>
+  <a href="#oraculo" onclick="closeGnMobile()">III — Oráculo</a>
+  <a href="#alquimistas" onclick="closeGnMobile()">IV — Alquimistas</a>
+  <a href="#galeria" onclick="closeGnMobile()">V — El Santuario</a>
+  <a href="#ritual" onclick="closeGnMobile()">VI — Ritual</a>
+</div>
+
+<!-- ====== CAP I — PORTADA / HERO ====== -->
+<section class="chapter" id="portada">
+  <div class="ch-bg-art ch1-bg"></div>
+  <div class="hero-wrap">
+    <div class="hero-left-col">
+      <div class="chapter-stamp">Capítulo I</div>
+      <h1 class="hero-grimtitle">
+        <span class="hg-where">Donde cada trago</span>
+        <span class="hg-is">es una</span>
+        <span class="hg-word">POCIÓN</span>
+      </h1>
+      <div class="hero-rune-divider">
+        <span class="rune-line"></span>
+        <span class="rune-char">᛭</span>
+        <span class="rune-line"></span>
+      </div>
+      <p class="hero-lore">En las noches de Cali, existe un lugar donde la botánica, la alquimia y el arte se funden en cada copa. Nuestros maestros alquimistas transforman ingredientes locales en experiencias que trascienden el tiempo.</p>
+      <div class="hero-sigils">
+        <div class="sigil"><span class="sigil-num">50+</span><span class="sigil-lbl">Pociones</span></div>
+        <div class="sigil-sep">᛬</div>
+        <div class="sigil"><span class="sigil-num">10</span><span class="sigil-lbl">Años de Arte</span></div>
+        <div class="sigil-sep">᛬</div>
+        <div class="sigil"><span class="sigil-num">4.9✦</span><span class="sigil-lbl">Reputación</span></div>
+      </div>
+      <div class="hero-ctas">
+        <button class="btn-grimoire" onclick="document.getElementById('pociones').scrollIntoView({behavior:'smooth'})">
+          <span class="btn-rune">⚗</span> Ver el Grimorio
+        </button>
+        <button class="btn-ghost-grim" onclick="openOracle()">
+          <span>🔮</span> Consultar el Oráculo
+        </button>
+      </div>
+      <div class="horario-scroll">
+        <div class="hs-title">✦ Horas del Santuario ✦</div>
+        <div class="hs-row"><span>Lun – Jue</span><span>6:00 PM — 1:00 AM</span></div>
+        <div class="hs-row"><span>Vie – Sáb</span><span>6:00 PM — 3:00 AM</span></div>
+        <div class="hs-row"><span>Domingo</span><span>5:00 PM — 12:00 AM</span></div>
+      </div>
+    </div>
+    <div class="hero-right-col">
+      <!-- Astrolabe / central potion display -->
+      <div class="astrolabe-wrap">
+        <div class="astrolabe-outer" id="astroOuter">
+          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" class="astro-svg">
+            <circle cx="200" cy="200" r="190" fill="none" stroke="#c8a84b" stroke-width="0.6" opacity="0.3"/>
+            <circle cx="200" cy="200" r="170" fill="none" stroke="#c8a84b" stroke-width="0.3" opacity="0.2"/>
+            <!-- Zodiac markers -->
+            <g opacity="0.35" stroke="#c8a84b" stroke-width="0.5">
+              <line x1="200" y1="12" x2="200" y2="30"/><line x1="388" y1="200" x2="370" y2="200"/>
+              <line x1="200" y1="388" x2="200" y2="370"/><line x1="12" y1="200" x2="30" y2="200"/>
+              <line x1="335" y1="65" x2="323" y2="77"/><line x1="335" y1="335" x2="323" y2="323"/>
+              <line x1="65" y1="65" x2="77" y2="77"/><line x1="65" y1="335" x2="77" y2="323"/>
+            </g>
+            <!-- Ingredient orbit rings -->
+            <circle cx="200" cy="200" r="140" fill="none" stroke="#c8a84b" stroke-width="0.4" stroke-dasharray="8,6" opacity="0.25"/>
+            <circle cx="200" cy="200" r="100" fill="none" stroke="#8b3a3a" stroke-width="0.4" stroke-dasharray="5,8" opacity="0.25"/>
+          </svg>
+        </div>
+        <!-- Orbiting ingredient icons -->
+        <div class="orbit-ring r1" id="orbit1">
+          <div class="orbit-item" style="--a:0deg">🍋</div>
+          <div class="orbit-item" style="--a:72deg">🌿</div>
+          <div class="orbit-item" style="--a:144deg">🫚</div>
+          <div class="orbit-item" style="--a:216deg">🍓</div>
+          <div class="orbit-item" style="--a:288deg">🌶</div>
+        </div>
+        <div class="orbit-ring r2" id="orbit2">
+          <div class="orbit-item sm" style="--a:36deg">✨</div>
+          <div class="orbit-item sm" style="--a:120deg">🫧</div>
+          <div class="orbit-item sm" style="--a:200deg">🔥</div>
+          <div class="orbit-item sm" style="--a:300deg">❄️</div>
+        </div>
+        <!-- Central potion vial -->
+        <div class="central-vial" id="centralVial">
+          <svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg" class="vial-svg">
+            <!-- Cork -->
+            <rect x="46" y="8" width="28" height="18" rx="4" fill="#6b4a1a" stroke="#8b6914" stroke-width="0.8"/>
+            <rect x="50" y="24" width="20" height="6" rx="2" fill="#8b6914"/>
+            <!-- Glass neck -->
+            <path d="M50 30 L46 50 L74 50 L70 30Z" fill="rgba(200,168,75,0.08)" stroke="#c8a84b" stroke-width="1"/>
+            <!-- Glass body -->
+            <path d="M46 50 L30 80 L28 130 Q28 160 60 160 Q92 160 92 130 L90 80 L74 50Z"
+              fill="url(#vialGrad)" stroke="#c8a84b" stroke-width="1.2"/>
+            <!-- Liquid fill animated -->
+            <clipPath id="vialClip">
+              <path d="M46 50 L30 80 L28 130 Q28 160 60 160 Q92 160 92 130 L90 80 L74 50Z"/>
+            </clipPath>
+            <rect x="20" y="90" width="80" height="80" fill="url(#liquidGrad)" clip-path="url(#vialClip)" opacity="0.85">
+              <animate attributeName="y" values="90;85;90" dur="3s" repeatCount="indefinite"/>
+            </rect>
+            <!-- Shimmer -->
+            <path d="M38 90 Q42 110 38 130" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" clip-path="url(#vialClip)"/>
+            <!-- Bubbles -->
+            <circle cx="55" cy="130" r="3" fill="rgba(255,255,255,0.25)"><animate attributeName="cy" values="140;95;140" dur="2.4s" repeatCount="indefinite"/></circle>
+            <circle cx="68" cy="120" r="2" fill="rgba(255,255,255,0.2)"><animate attributeName="cy" values="145;100;145" dur="3.1s" repeatCount="indefinite"/></circle>
+            <circle cx="48" cy="115" r="1.5" fill="rgba(255,255,255,0.15)"><animate attributeName="cy" values="148;108;148" dur="2s" repeatCount="indefinite"/></circle>
+            <!-- Rune on glass -->
+            <text x="60" y="118" text-anchor="middle" font-size="18" fill="#c8a84b" opacity="0.3">⚗</text>
+            <defs>
+              <linearGradient id="vialGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="rgba(200,168,75,0.04)"/>
+                <stop offset="50%" stop-color="rgba(200,168,75,0.1)"/>
+                <stop offset="100%" stop-color="rgba(200,168,75,0.04)"/>
+              </linearGradient>
+              <linearGradient id="liquidGrad" x1="0" y1="0" x2="0.5" y2="1">
+                <stop offset="0%" stop-color="#8b1a3a" stop-opacity="0.8"/>
+                <stop offset="40%" stop-color="#4a0e6b" stop-opacity="0.85"/>
+                <stop offset="100%" stop-color="#1a0a1a" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="vial-glow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-grim">
+    <svg width="24" height="36" viewBox="0 0 24 36"><line x1="12" y1="0" x2="12" y2="28" stroke="#c8a84b" stroke-width="0.8" opacity="0.5"/><path d="M6 22 L12 30 L18 22" fill="none" stroke="#c8a84b" stroke-width="1" opacity="0.7"/></svg>
+  </div>
+</section>
+
+<!-- ====== CAP II — POCIONES / MENÚ ====== -->
+<section class="chapter chapter-parch" id="pociones">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp">Capítulo II</div>
+      <h2 class="ch-title">El Grimorio<em> de Pociones</em></h2>
+      <div class="ch-ornament">✦</div>
+      <p class="ch-lore">Cada poción fue concebida bajo luna llena, destilada con hierbas del Valle del Cauca y sellada con la magia del maestro alquimista que la creó.</p>
+    </div>
+    <!-- Potion filter tabs -->
+    <div class="potion-tabs" id="potionTabs"></div>
+    <!-- Potion grid -->
+    <div class="potion-grimoire" id="potionGrimoire"></div>
+  </div>
+</section>
+
+<!-- ====== CAP III — ORÁCULO ====== -->
+<section class="chapter chapter-dark" id="oraculo">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp light">Capítulo III</div>
+      <h2 class="ch-title light">El Oráculo<em> de Sabores</em></h2>
+      <div class="ch-ornament gold">✦</div>
+      <p class="ch-lore light">Responde tres preguntas al grimorio. El Oráculo revelará la poción que tu espíritu necesita esta noche.</p>
+    </div>
+    <div class="oracle-chamber" id="oracleChamber">
+      <div class="oracle-crystal" id="oracleCrystal">
+        <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" class="crystal-svg">
+          <polygon points="100,10 175,80 175,170 100,210 25,170 25,80" fill="url(#crystalGrad)" stroke="#c8a84b" stroke-width="1"/>
+          <polygon points="100,10 175,80 175,170 100,210 25,170 25,80" fill="none" stroke="rgba(200,168,75,0.3)" stroke-width="0.4" transform="scale(0.85) translate(15,14)"/>
+          <line x1="100" y1="10" x2="100" y2="210" stroke="rgba(200,168,75,0.15)" stroke-width="0.5"/>
+          <line x1="25" y1="80" x2="175" y2="80" stroke="rgba(200,168,75,0.15)" stroke-width="0.5"/>
+          <line x1="25" y1="170" x2="175" y2="170" stroke="rgba(200,168,75,0.15)" stroke-width="0.5"/>
+          <text id="crystalSymbol" x="100" y="120" text-anchor="middle" font-size="40" fill="#c8a84b" opacity="0.5">🔮</text>
+          <defs>
+            <linearGradient id="crystalGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1a0a2e" stop-opacity="0.95"/>
+              <stop offset="60%" stop-color="#0d0520" stop-opacity="0.98"/>
+              <stop offset="100%" stop-color="#120820" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="crystal-glow" id="crystalGlow"></div>
+      </div>
+      <div class="oracle-questions" id="oracleQuestions"></div>
+      <div class="oracle-result" id="oracleResult" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== CAP IV — ALQUIMISTAS ====== -->
+<section class="chapter chapter-parch" id="alquimistas">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp">Capítulo IV</div>
+      <h2 class="ch-title">Los Maestros<em> Alquimistas</em></h2>
+      <div class="ch-ornament">✦</div>
+      <p class="ch-lore">Guardianes de fórmulas secretas transmitidas de generación en generación. Cada uno, un maestro en su arte.</p>
+    </div>
+    <div class="alchemists-grid" id="alchemistsGrid"></div>
+  </div>
+</section>
+
+<!-- ====== CAP V — GALERÍA ====== -->
+<section class="chapter chapter-dark" id="galeria">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp light">Capítulo V</div>
+      <h2 class="ch-title light">El Santuario<em> Nocturno</em></h2>
+      <div class="ch-ornament gold">✦</div>
+    </div>
+  </div>
+  <div class="gallery-grimoire" id="galleryGrimoire"></div>
+  <div class="gallery-grim-dots" id="galleryDots"></div>
+</section>
+
+<!-- ====== CAP VI — RITUAL DE RESERVA ====== -->
+<section class="chapter chapter-parch" id="ritual">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp">Capítulo VI</div>
+      <h2 class="ch-title">El Ritual<em> de Convocación</em></h2>
+      <div class="ch-ornament">✦</div>
+      <p class="ch-lore">Completa el ritual para reservar tu lugar en el santuario. El grimorio guardará tu invocación.</p>
+    </div>
+    <div class="ritual-layout">
+      <!-- The ritual form (looks like a spell scroll) -->
+      <div class="spell-scroll">
+        <div class="ss-roll-top"></div>
+        <div class="ss-body">
+          <!-- Step I -->
+          <div class="spell-step active" id="sp1">
+            <div class="ss-step-title"><span class="ss-roman">I.</span> Elige tu Alquimista</div>
+            <div class="alch-pick" id="alchPick"></div>
+          </div>
+          <!-- Step II -->
+          <div class="spell-step" id="sp2">
+            <div class="ss-step-title"><span class="ss-roman">II.</span> Elige tu Poción</div>
+            <div class="potion-pick" id="potionPick"></div>
+            <button class="ss-back" onclick="goSpell(1)">← Anterior</button>
+          </div>
+          <!-- Step III -->
+          <div class="spell-step" id="sp3">
+            <div class="ss-step-title"><span class="ss-roman">III.</span> Fecha &amp; Hora del Ritual</div>
+            <input type="date" id="ritDate" class="grimoire-input" style="margin-bottom:14px"/>
+            <div class="ritual-time-grid" id="ritTimeGrid">
+              <p class="grim-hint">Selecciona una fecha para invocar los horarios disponibles</p>
+            </div>
+            <button class="ss-back" onclick="goSpell(2)">← Anterior</button>
+          </div>
+          <!-- Step IV -->
+          <div class="spell-step" id="sp4">
+            <div class="ss-step-title"><span class="ss-roman">IV.</span> Datos del Invocador</div>
+            <div class="grim-fields">
+              <input type="text" id="ritName" placeholder="Tu nombre completo" class="grimoire-input"/>
+              <input type="tel" id="ritPhone" placeholder="Teléfono / WhatsApp" class="grimoire-input"/>
+              <input type="email" id="ritEmail" placeholder="Correo electrónico" class="grimoire-input"/>
+              <select id="ritOcasion" class="grimoire-input">
+                <option value="">Ocasión especial (opcional)</option>
+                <option>Cumpleaños 🎂</option>
+                <option>Aniversario 🌹</option>
+                <option>Ritual grupal 🥂</option>
+                <option>Primera visita ✨</option>
+                <option>Celebración ⚗</option>
+              </select>
+              <textarea id="ritNote" placeholder="Petición especial al alquimista..." class="grimoire-input" rows="3" style="grid-column:1/-1"></textarea>
+            </div>
+            <!-- PAYMENT SECTION -->
+            <div class="pay-ritual-wrap">
+              <div class="pay-ritual-title">✦ Método de Pago al Llegar</div>
+              <div class="pay-ritual-grid">
+                <button class="pay-ritual-btn" id="pr-cash" onclick="selectRitPay('cash',this)">
+                  <span class="prb-icon">💵</span>
+                  <span class="prb-name">Efectivo</span>
+                  <span class="prb-note">Al llegar</span>
+                </button>
+                <button class="pay-ritual-btn" id="pr-nequi" onclick="selectRitPay('nequi',this)">
+                  <span class="prb-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="#6C0CE0"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black" font-size="11" font-weight="900" fill="white">N</text></svg>
+                  </span>
+                  <span class="prb-name">Nequi</span>
+                  <span class="prb-note">315 678 9012</span>
+                </button>
+                <button class="pay-ritual-btn" id="pr-daviplata" onclick="selectRitPay('daviplata',this)">
+                  <span class="prb-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="7" fill="#E30613"/><text x="14" y="19" text-anchor="middle" font-family="Arial Black" font-size="9" font-weight="900" fill="white">DV</text></svg>
+                  </span>
+                  <span class="prb-name">Daviplata</span>
+                  <span class="prb-note">315 678 9012</span>
+                </button>
+                <button class="pay-ritual-btn" id="pr-transfer" onclick="selectRitPay('transfer',this)">
+                  <span class="prb-icon">🏦</span>
+                  <span class="prb-name">Transferencia</span>
+                  <span class="prb-note">PSE / Bancolombia</span>
+                </button>
+              </div>
+              <!-- Nequi/Davi copy panel -->
+              <div class="pay-copy-panel" id="payCopyPanel" style="display:none">
+                <span class="pcp-label" id="pcpLabel">Número:</span>
+                <span class="pcp-num" id="pcpNum">315 678 9012</span>
+                <button class="pcp-copy" onclick="copyPayNum()">⎘ Copiar</button>
+              </div>
+              <div class="pay-msg" id="payMsg"></div>
+            </div>
+            <button class="btn-grimoire full-grim" onclick="sealRitual()">
+              ✦ Sellar el Ritual
+            </button>
+            <button class="ss-back" onclick="goSpell(3)">← Anterior</button>
+          </div>
+        </div>
+        <div class="ss-roll-bottom"></div>
+      </div>
+
+      <!-- Grimoire summary panel -->
+      <div class="ritual-tome">
+        <div class="tome-cover">
+          <div class="tome-title">Compendio<br/><em>del Ritual</em></div>
+          <div class="tome-seal">⚗</div>
+        </div>
+        <div class="tome-entries">
+          <div class="te"><span>Alquimista</span><strong id="ts-alch">—</strong></div>
+          <div class="te"><span>Poción</span><strong id="ts-pot">—</strong></div>
+          <div class="te"><span>Precio</span><strong id="ts-price">—</strong></div>
+          <div class="te"><span>Fecha</span><strong id="ts-date">—</strong></div>
+          <div class="te"><span>Hora</span><strong id="ts-time">—</strong></div>
+          <div class="te"><span>Ocasión</span><strong id="ts-ocas">—</strong></div>
+          <div class="te"><span>Pago</span><strong id="ts-pay">—</strong></div>
+        </div>
+        <div class="tome-horario">
+          <div class="th-head">✦ Horario del Santuario</div>
+          <div class="th-r"><span>Lun – Jue</span><span>6 PM — 1 AM</span></div>
+          <div class="th-r"><span>Vie – Sáb</span><span>6 PM — 3 AM</span></div>
+          <div class="th-r"><span>Domingo</span><span>5 PM — 12 AM</span></div>
+        </div>
+        <div class="tome-addr">
+          <i class="fas fa-map-marker-alt"></i>
+          Cra 5 #15N-20, Granada,<br/>Cali, Valle del Cauca
+        </div>
+        <a class="btn-wa-grim" href="https://wa.me/573156789012" target="_blank">
+          <i class="fab fa-whatsapp"></i> Reservar por WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RITUAL SEALED MODAL -->
+<div class="ritual-modal" id="ritualModal">
+  <div class="rm-scroll">
+    <div class="rm-top"></div>
+    <div class="rm-body">
+      <div class="rm-seal">⚗</div>
+      <h3>Ritual Sellado</h3>
+      <div class="rm-divider">✦ ✦ ✦</div>
+      <p id="rmText"></p>
+      <button class="btn-grimoire" onclick="closeRitualModal()">✦ Que así sea</button>
+    </div>
+    <div class="rm-bottom"></div>
+  </div>
+  <div class="rm-bg" onclick="closeRitualModal()"></div>
+</div>
+
+<!-- ORACLE MODAL -->
+<div class="oracle-modal" id="oracleModal">
+  <div class="om-wrap">
+    <div class="om-crystal-bg"></div>
+    <button class="om-close" onclick="closeOracle()">✕</button>
+    <div class="om-inner" id="omInner"></div>
+  </div>
+  <div class="om-bg" onclick="closeOracle()"></div>
+</div>
+
+<!-- UBICACIÓN -->
+<section class="chapter chapter-dark" id="ubicacion">
+  <div class="container">
+    <div class="chapter-opener">
+      <div class="chapter-stamp light">El Santuario</div>
+      <h2 class="ch-title light">Dónde<em> Encontrarnos</em></h2>
+      <div class="ch-ornament gold">✦</div>
+    </div>
+    <div class="ubi-layout">
+      <div class="ubi-tome">
+        <div class="ubi-entry"><i class="fas fa-map-marker-alt"></i><div><strong>El Santuario</strong><p>Cra 5 #15N-20, Granada,<br/>Cali, Valle del Cauca</p></div></div>
+        <div class="ubi-entry"><i class="fas fa-phone"></i><div><strong>Comunicación</strong><p>+57 315 678 9012</p></div></div>
+        <div class="ubi-entry"><i class="fab fa-instagram"></i><div><strong>Visiones</strong><p>@alquimianocturna</p></div></div>
+        <div class="ubi-entry"><i class="fab fa-whatsapp"></i><div><strong>Mensaje Directo</strong><p>+57 315 678 9012</p></div></div>
+        <div class="founders-grim">
+          <div class="fg-title">✦ Los Fundadores</div>
+          <div class="fg-row"><div class="fg-av" style="border-color:#c8a84b">JJ</div><div><strong>Jhon Jairo Parra</strong><span>Maestro Alquimista & Fundador</span></div></div>
+          <div class="fg-row"><div class="fg-av" style="border-color:#8b3a3a">SB</div><div><strong>Sebastián Banguera</strong><span>Arquitecto del Santuario & Co-Fundador</span></div></div>
+        </div>
+        <a class="btn-grimoire" href="https://www.google.com/maps/dir/?api=1&destination=Cra+5+15N-20+Granada+Cali" target="_blank"><i class="fas fa-route"></i> Trazar la ruta</a>
+      </div>
+      <div class="map-grim">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127500!2d-76.5225!3d3.4516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e30a6f0cc4bb3f1%3A0x1f0fb5e952ae6168!2sCali%2C%20Valle%20del%20Cauca!5e0!3m2!1ses!2sco!4v1680000000000"
+          width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer-grim">
+  <div class="fg-inner">
+    <div class="fg-brand">
+      <span class="fg-symbol">⚗</span>
+      <span class="fg-name">ALQUIMIA NOCTURNA</span>
+    </div>
+    <p class="fg-lore">El arte secreto de los sabores · Cali, Colombia · Est. MMXIV</p>
+    <div class="fg-social">
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-tiktok"></i></a>
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="#"><i class="fab fa-whatsapp"></i></a>
+    </div>
+    <div class="fg-bottom">
+      <span class="rune-line short"></span>
+      © MMXXIV Alquimia Nocturna · Todos los secretos reservados
+      <span class="rune-line short"></span>
+    </div>
+  </div>
+</footer>
+
+<script src="alquimia.js"></script>
+</body>
+</html>
